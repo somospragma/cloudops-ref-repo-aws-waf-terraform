@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <style>
+      .resource { fill: #ffffff; stroke: #d86613; stroke-width: 2; }
+      .aws-orange { fill: #d86613; }
+      .aws-blue { fill: #2f74b8; }
+      .aws-green { fill: #3b7b3b; }
+      .aws-red { fill: #cc2f2f; }
+      .aws-yellow { fill: #e8b010; }
+      .text { font-family: Arial, sans-serif; font-size: 14px; fill: #444444; }
+      .title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #232f3e; }
+      .arrow { stroke: #444444; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .dashed { stroke-dasharray: 5,5; }
+      .component { fill: #f8f8f8; stroke: #888888; stroke-width: 1; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#444444" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" class="title">AWS WAF Architecture</text>
+  
+  <!-- Internet -->
+  <circle cx="100" cy="120" r="40" fill="#f8f8f8" stroke="#888888" stroke-width="1" />
+  <text x="100" y="125" text-anchor="middle" class="text">Internet</text>
+  
+  <!-- AWS Cloud Border -->
+  <rect x="200" y="60" width="550" height="380" rx="10" ry="10" fill="#f9f9f9" stroke="#232f3e" stroke-width="2" stroke-dasharray="5,5" />
+  <text x="220" y="80" class="text" style="font-weight: bold;">AWS Cloud</text>
+  
+  <!-- WAF -->
+  <rect x="250" y="100" width="120" height="80" rx="5" ry="5" class="resource" />
+  <text x="310" y="145" text-anchor="middle" class="text">AWS WAF</text>
+  <text x="310" y="165" text-anchor="middle" class="text" style="font-size: 12px;">Web ACL</text>
+  
+  <!-- CloudFront -->
+  <rect x="450" y="100" width="120" height="80" rx="5" ry="5" class="resource" />
+  <text x="510" y="145" text-anchor="middle" class="text">CloudFront</text>
+  <text x="510" y="165" text-anchor="middle" class="text" style="font-size: 12px;">Distribution</text>
+  
+  <!-- ALB -->
+  <rect x="450" y="220" width="120" height="80" rx="5" ry="5" class="resource" />
+  <text x="510" y="265" text-anchor="middle" class="text">Application</text>
+  <text x="510" y="285" text-anchor="middle" class="text">Load Balancer</text>
+  
+  <!-- API Gateway -->
+  <rect x="450" y="340" width="120" height="80" rx="5" ry="5" class="resource" />
+  <text x="510" y="385" text-anchor="middle" class="text">API Gateway</text>
+  
+  <!-- CloudWatch -->
+  <rect x="250" y="220" width="120" height="80" rx="5" ry="5" class="resource" />
+  <text x="310" y="265" text-anchor="middle" class="text">CloudWatch</text>
+  <text x="310" y="285" text-anchor="middle" class="text" style="font-size: 12px;">Metrics & Logs</text>
+  
+  <!-- EC2 Instances -->
+  <rect x="650" y="220" width="80" height="80" rx="5" ry="5" class="resource" />
+  <text x="690" y="265" text-anchor="middle" class="text">EC2</text>
+  <text x="690" y="285" text-anchor="middle" class="text" style="font-size: 12px;">Instances</text>
+  
+  <!-- Lambda -->
+  <rect x="650" y="340" width="80" height="80" rx="5" ry="5" class="resource" />
+  <text x="690" y="385" text-anchor="middle" class="text">Lambda</text>
+  
+  <!-- Connections -->
+  <path d="M140 120 L250 140" class="arrow" />
+  <path d="M370 140 L450 140" class="arrow" />
+  <path d="M370 140 L450 260" class="arrow" />
+  <path d="M370 140 L450 380" class="arrow" />
+  <path d="M310 180 L310 220" class="arrow" />
+  <path d="M570 260 L650 260" class="arrow" />
+  <path d="M570 380 L650 380" class="arrow" />
+  
+  <!-- WAF Rules -->
+  <rect x="250" y="340" width="120" height="80" rx="5" ry="5" fill="#f8f8f8" stroke="#888888" stroke-width="1" />
+  <text x="310" y="360" text-anchor="middle" class="text" style="font-weight: bold;">WAF Rules</text>
+  <text x="310" y="380" text-anchor="middle" class="text" style="font-size: 12px;">- Managed Rules</text>
+  <text x="310" y="395" text-anchor="middle" class="text" style="font-size: 12px;">- IP Sets</text>
+  <text x="310" y="410" text-anchor="middle" class="text" style="font-size: 12px;">- Rate Limiting</text>
+  
+  <path d="M310 320 L310 340" class="arrow" />
+</svg>
