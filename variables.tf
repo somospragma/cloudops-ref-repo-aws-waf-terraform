@@ -5,7 +5,7 @@ variable "waf_config" {
     description   = string
     default_allow = bool
     rules = list(object({
-      enabled = optional(bool, true)
+      enabled = optional(bool, false)
       name     = string
       priority = number
       allow    = bool
