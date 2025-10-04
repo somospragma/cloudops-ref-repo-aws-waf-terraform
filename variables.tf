@@ -24,9 +24,18 @@ variable "waf_config" {
         managed_rule_group_statement = optional(object({
           rule_name   = string
           vendor_name = string
+          rule_action_override = optional(list(object({
+            name = string
+            action_to_use = object({
+              allow = optional(bool, false)
+              block = optional(bool, false)
+              count = optional(bool, false)
+            })
+          })), [])
         }), {
           rule_name   = ""  # VACÍO = no crear
           vendor_name = ""  # VACÍO = no crear
+          rule_action_override = []
         })
         
         # SQL Injection - DEFAULT: null = no crear

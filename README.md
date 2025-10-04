@@ -153,6 +153,24 @@ The module supports the following statement types:
      managed_rule_group_statement = {
        rule_name   = "AWSManagedRulesCommonRuleSet"
        vendor_name = "AWS"
+       rule_action_override = [
+         {
+           name = "SizeRestrictions_QUERYSTRING"
+           action_to_use = {
+             count = true
+             allow = false
+             block = false
+           }
+         },
+         {
+           name = "NoUserAgent_HEADER"
+           action_to_use = {
+             count = true
+             allow = false
+             block = false
+           }
+         }
+       ]
      }
    }
    ```
