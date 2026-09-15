@@ -25,20 +25,25 @@ This Terraform module deploys AWS Web Application Firewall (WAF) resources to pr
 
 ```hcl
 module "waf" {
-  source       = "git::https://github.com/somospragma/cloudops-ref-repo-aws-waf-terraform.git?ref=v1.0.0"
-  client       = "pragma"
-  functionality = "api"
-  environment  = "dev"
-  
-  waf_config = [
-    {
-      application   = "payment-api"
+  source  = "git::https://github.com/somospragma/cloudops-ref-repo-aws-waf-terraform.git?ref=v1.0.0"
+  providers = {
+    aws.project = aws.principal
+  }
+
+  client      = "pragma"
+  project     = "api"
+  environment = "dev"
+
+  # waf_config es un map: la clave identifica la aplicación
+  waf_config = {
+    "payment-api" = {
       scope         = "REGIONAL"
       description   = "WAF for Payment API"
       default_allow = false
-      
+
       rules = [
         {
+          enabled  = true
           name     = "AWSManagedRulesCommonRuleSet"
           priority = 0
           allow    = false
@@ -52,8 +57,25 @@ module "waf" {
           sampled_requests_enabled   = true
         },
         {
-          name     = "GeoBlockRule"
+          enabled  = true
+          name     = "AllowOfficeIPs"
           priority = 1
+          allow    = true
+          statement = {
+            ip_set = {
+              description        = "IPs corporativas permitidas"
+              scope              = "REGIONAL"
+              ip_address_version = "IPV4"
+              addresses          = ["203.0.113.0/24", "198.51.100.10/32"]
+            }
+          }
+          cloudwatch_metrics_enabled = true
+          sampled_requests_enabled   = true
+        },
+        {
+          enabled  = true
+          name     = "GeoBlockRule"
+          priority = 2
           allow    = false
           statement = {
             geo_match_statement = {
@@ -64,11 +86,11 @@ module "waf" {
           sampled_requests_enabled   = true
         }
       ]
-      
+
       cloudwatch_metrics_enabled = true
       sampled_requests_enabled   = true
     }
-  ]
+  }
 }
 ```
 
@@ -104,15 +126,16 @@ module "waf" {
 | Name | Description | Type | Required | Default |
 |------|-------------|------|----------|---------|
 | client | Client name for resource naming | string | yes | - |
-| functionality | Functionality identifier for resource naming | string | yes | - |
-| environment | Deployment environment (dev, test, prod) | string | yes | - |
-| waf_config | List of WAF configurations | list(object) | yes | - |
+| project | Project name for resource naming (3-15 chars) | string | yes | - |
+| environment | Deployment environment (dev, qa, pdn, prod) | string | yes | - |
+| waf_config | Map of WAF configurations, keyed by application identifier | map(object) | yes | - |
 
 ### WAF Configuration Object
 
+Each entry in the `waf_config` map is keyed by the application identifier (used in resource naming and tags).
+
 | Name | Description | Type | Required | Default |
 |------|-------------|------|----------|---------|
-| application | Application identifier | string | yes | - |
 | scope | WAF scope (REGIONAL or CLOUDFRONT) | string | yes | - |
 | description | WAF description | string | yes | - |
 | default_allow | Whether to allow by default | bool | yes | - |
@@ -140,12 +163,22 @@ The module supports the following statement types:
    ```hcl
    statement = {
      ip_set = {
-       description = "Allowed IPs"
-       scope = "REGIONAL"
+       description        = "Allowed IPs"
+       scope              = "REGIONAL"
        ip_address_version = "IPV4"
+       addresses          = ["203.0.113.0/24", "198.51.100.10/32"]
      }
    }
    ```
+
+   | Field | Description | Type | Required | Default |
+   |-------|-------------|------|----------|---------|
+   | description | IP set description | string | yes | - |
+   | scope | IP set scope (REGIONAL or CLOUDFRONT). Empty string disables the statement | string | yes | - |
+   | ip_address_version | IP version (IPV4 or IPV6). Must match the CIDRs in `addresses` | string | yes | IPV4 |
+   | addresses | List of CIDRs to include in the IP set (e.g. `["203.0.113.0/24"]`) | list(string) | no | `[]` |
+
+   > **Note:** A rule with `allow = true` referencing an IP set only allows the requests that match those IPs; the rest keep being evaluated or fall through to the Web ACL `default_action`. For a strict allowlist, combine it with `default_allow = false`.
 
 2. **Managed Rule Group Statement**
    ```hcl

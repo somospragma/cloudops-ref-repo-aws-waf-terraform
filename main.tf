@@ -1,10 +1,10 @@
 resource "aws_wafv2_web_acl" "waf" {
-  provider            = aws.project
+  provider    = aws.project
   for_each    = var.waf_config
   name        = join("-", [var.client, var.project, var.environment, "waf", each.key])
   description = each.value.description
   scope       = each.value.scope
-  
+
   default_action {
     dynamic "allow" {
       for_each = each.value.default_allow ? [1] : []
@@ -21,7 +21,7 @@ resource "aws_wafv2_web_acl" "waf" {
     content {
       name     = rule.value.name
       priority = rule.value.priority
-      
+
       # LÓGICA: Solo action si NO es managed rule
       dynamic "action" {
         for_each = rule.value.statement.managed_rule_group_statement.rule_name == "" ? [1] : []
@@ -51,7 +51,7 @@ resource "aws_wafv2_web_acl" "waf" {
           }
         }
       }
-      
+
       statement {
         # SOLO crear si scope NO está vacío
         dynamic "ip_set_reference_statement" {
@@ -60,14 +60,14 @@ resource "aws_wafv2_web_acl" "waf" {
             arn = aws_wafv2_ip_set.ip_set["${each.key}-${rule.value.name}"].arn
           }
         }
-        
+
         # SOLO crear si rule_name NO está vacío
         dynamic "managed_rule_group_statement" {
           for_each = rule.value.statement.managed_rule_group_statement.rule_name != "" ? [rule.value.statement.managed_rule_group_statement] : []
           content {
             name        = managed_rule_group_statement.value.rule_name
             vendor_name = managed_rule_group_statement.value.vendor_name
-            
+
             dynamic "rule_action_override" {
               for_each = managed_rule_group_statement.value.rule_action_override
               content {
@@ -168,7 +168,7 @@ resource "aws_wafv2_web_acl" "waf" {
           }
         }
       }
-      
+
       visibility_config {
         cloudwatch_metrics_enabled = rule.value.cloudwatch_metrics_enabled
         metric_name                = join("-", [var.client, var.project, var.environment, "rule", "log", rule.value.name])
@@ -176,7 +176,7 @@ resource "aws_wafv2_web_acl" "waf" {
       }
     }
   }
-  
+
   visibility_config {
     cloudwatch_metrics_enabled = each.value.cloudwatch_metrics_enabled
     metric_name                = join("-", [var.client, var.project, var.environment, "waf", "log", each.key])
@@ -191,23 +191,23 @@ resource "aws_wafv2_web_acl" "waf" {
 
 # SOLO crear IP Sets si scope NO está vacío Y regla está habilitada
 resource "aws_wafv2_ip_set" "ip_set" {
-  provider            = aws.project
+  provider = aws.project
   for_each = { for item in flatten([
     for waf_key, waf in var.waf_config : [
       for rule in waf.rules : {
         "application" : waf_key
         "rule_name" : rule.name
         "ip_set" : rule.statement.ip_set
-      } if rule.statement.ip_set.scope != "" && 
-           rule.enabled == true
+      } if rule.statement.ip_set.scope != "" &&
+      rule.enabled == true
     ]
   ]) : "${item.application}-${item.rule_name}" => item }
-  
+
   name               = join("-", [var.client, var.project, var.environment, "ip", "set", each.value.rule_name])
   description        = each.value.ip_set.description
   scope              = each.value.ip_set.scope
   ip_address_version = each.value.ip_set.ip_address_version
-  addresses          = []
+  addresses          = each.value.ip_set.addresses
 
   tags = merge(
     { name = join("-", [var.client, var.project, var.environment, "ip", "set", each.value.rule_name]) },
@@ -217,7 +217,7 @@ resource "aws_wafv2_ip_set" "ip_set" {
 
 # SOLO crear Regex Patterns si NO es null Y regla está habilitada
 resource "aws_wafv2_regex_pattern_set" "regex_pattern" {
-  provider            = aws.project
+  provider = aws.project
   for_each = { for item in flatten([
     for waf_key, waf in var.waf_config : [
       for rule in waf.rules : {
@@ -225,11 +225,11 @@ resource "aws_wafv2_regex_pattern_set" "regex_pattern" {
         "scope" : waf.scope
         "rule_name" : rule.name
         "regex_strings" : rule.statement.regex_pattern.regex_strings
-      } if rule.statement.regex_pattern != null && 
-           rule.enabled == true
+      } if rule.statement.regex_pattern != null &&
+      rule.enabled == true
     ]
   ]) : "${item.application}-${item.rule_name}" => item }
-  
+
   name  = join("-", [var.client, var.project, var.environment, "pattern", each.value.rule_name])
   scope = each.value.scope
 
@@ -239,7 +239,7 @@ resource "aws_wafv2_regex_pattern_set" "regex_pattern" {
       regex_string = regular_expression.value
     }
   }
-  
+
   tags = merge(
     { name = join("-", [var.client, var.project, var.environment, "pattern", each.value.rule_name]) },
     { application = each.value.application }
