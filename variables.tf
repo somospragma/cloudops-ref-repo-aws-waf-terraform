@@ -9,17 +9,16 @@ variable "waf_config" {
       priority = number
       allow    = optional(bool, false)
       statement = object({
-        # IP Set - DEFAULT: valores que validen pero indiquen "no usar"
+        # IP Set - Se crea solo si 'addresses' tiene elementos.
+        # El scope se hereda del Web ACL (waf.scope), no se define aquí.
         ip_set = optional(object({
-          description        = string
-          scope              = string
-          ip_address_version = string
-          addresses          = optional(list(string), []) # CIDRs a incluir en el IP set
+          description        = optional(string, "")
+          ip_address_version = optional(string, "IPV4")
+          addresses          = optional(list(string), []) # CIDRs; lista vacía = no crear
           }), {
-          description        = ""     # VACÍO = no crear
-          scope              = ""     # VACÍO = no crear
-          ip_address_version = "IPV4" # Para validación
-          addresses          = []     # Sin direcciones por defecto
+          description        = ""
+          ip_address_version = "IPV4"
+          addresses          = [] # LISTA VACÍA = no crear
         })
 
         # Managed Rule Group - DEFAULT: null = no crear

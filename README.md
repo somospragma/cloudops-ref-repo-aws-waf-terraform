@@ -64,7 +64,6 @@ module "waf" {
           statement = {
             ip_set = {
               description        = "IPs corporativas permitidas"
-              scope              = "REGIONAL"
               ip_address_version = "IPV4"
               addresses          = ["203.0.113.0/24", "198.51.100.10/32"]
             }
@@ -164,7 +163,6 @@ The module supports the following statement types:
    statement = {
      ip_set = {
        description        = "Allowed IPs"
-       scope              = "REGIONAL"
        ip_address_version = "IPV4"
        addresses          = ["203.0.113.0/24", "198.51.100.10/32"]
      }
@@ -173,10 +171,11 @@ The module supports the following statement types:
 
    | Field | Description | Type | Required | Default |
    |-------|-------------|------|----------|---------|
-   | description | IP set description | string | yes | - |
-   | scope | IP set scope (REGIONAL or CLOUDFRONT). Empty string disables the statement | string | yes | - |
-   | ip_address_version | IP version (IPV4 or IPV6). Must match the CIDRs in `addresses` | string | yes | IPV4 |
-   | addresses | List of CIDRs to include in the IP set (e.g. `["203.0.113.0/24"]`) | list(string) | no | `[]` |
+   | description | IP set description | string | no | `""` |
+   | ip_address_version | IP version (IPV4 or IPV6). Must match the CIDRs in `addresses` | string | no | IPV4 |
+   | addresses | List of CIDRs to include in the IP set (e.g. `["203.0.113.0/24"]`). The statement is only created when this list is non-empty | list(string) | no | `[]` |
+
+   > **Scope:** The IP set inherits its scope from the parent Web ACL (`scope` of the `waf_config` entry). You do **not** set it inside `ip_set`. Referencing an IP set whose scope differs from the Web ACL causes AWS to reject the update with `WAFInvalidParameterException: The ARN isn't valid` (field `RESOURCE_ARN`).
 
    > **Note:** A rule with `allow = true` referencing an IP set only allows the requests that match those IPs; the rest keep being evaluated or fall through to the Web ACL `default_action`. For a strict allowlist, combine it with `default_allow = false`.
 

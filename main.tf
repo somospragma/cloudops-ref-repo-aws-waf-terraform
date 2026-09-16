@@ -55,7 +55,7 @@ resource "aws_wafv2_web_acl" "waf" {
       statement {
         # SOLO crear si scope NO está vacío
         dynamic "ip_set_reference_statement" {
-          for_each = rule.value.statement.ip_set.scope != "" ? [rule.value.statement.ip_set] : []
+          for_each = length(rule.value.statement.ip_set.addresses) > 0 ? [rule.value.statement.ip_set] : []
           content {
             arn = aws_wafv2_ip_set.ip_set["${each.key}-${rule.value.name}"].arn
           }
@@ -196,16 +196,17 @@ resource "aws_wafv2_ip_set" "ip_set" {
     for waf_key, waf in var.waf_config : [
       for rule in waf.rules : {
         "application" : waf_key
+        "scope" : waf.scope
         "rule_name" : rule.name
         "ip_set" : rule.statement.ip_set
-      } if rule.statement.ip_set.scope != "" &&
+      } if length(rule.statement.ip_set.addresses) > 0 &&
       rule.enabled == true
     ]
   ]) : "${item.application}-${item.rule_name}" => item }
 
   name               = join("-", [var.client, var.project, var.environment, "ip", "set", each.value.rule_name])
   description        = each.value.ip_set.description
-  scope              = each.value.ip_set.scope
+  scope              = each.value.scope
   ip_address_version = each.value.ip_set.ip_address_version
   addresses          = each.value.ip_set.addresses
 
