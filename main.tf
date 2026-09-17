@@ -192,6 +192,10 @@ resource "aws_wafv2_web_acl" "waf" {
 # SOLO crear IP Sets si scope NO está vacío Y regla está habilitada
 resource "aws_wafv2_ip_set" "ip_set" {
   provider = aws.project
+  # El ciclo de vida del IP set NO depende de rule.enabled: se crea mientras
+  # tenga direcciones. Así, deshabilitar la regla solo quita la referencia del
+  # Web ACL sin destruir el IP set, evitando el WAFAssociatedItemException que
+  # se produce por la carrera entre UpdateWebACL y DeleteIPSet.
   for_each = { for item in flatten([
     for waf_key, waf in var.waf_config : [
       for rule in waf.rules : {
@@ -199,8 +203,7 @@ resource "aws_wafv2_ip_set" "ip_set" {
         "scope" : waf.scope
         "rule_name" : rule.name
         "ip_set" : rule.statement.ip_set
-      } if length(rule.statement.ip_set.addresses) > 0 &&
-      rule.enabled == true
+      } if length(rule.statement.ip_set.addresses) > 0
     ]
   ]) : "${item.application}-${item.rule_name}" => item }
 
@@ -214,6 +217,12 @@ resource "aws_wafv2_ip_set" "ip_set" {
     { name = join("-", [var.client, var.project, var.environment, "ip", "set", each.value.rule_name]) },
     { application = each.value.application }
   )
+
+  # Si en algún cambio futuro el IP set sí debe reemplazarse, crear el nuevo
+  # antes de destruir el viejo reduce la ventana de asociación con el Web ACL.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # SOLO crear Regex Patterns si NO es null Y regla está habilitada
